@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cafe Lutfi - Kasir Modern</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+  h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+  h2 { color: #34495e; margin-top: 40px; margin-bottom: 10px; border-bottom: 2px solid #2980b9; padding-bottom: 5px; }
+  table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
+  th, td { padding: 12px 15px; text-align: left; }
+  th { background-color: #2980b9; color: white; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f9f9f9; }
+  input[type="number"] { width: 60px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; text-align: center; }
+  input[type="text"], input[type="password"] { width: 100%; padding: 8px; margin:6px 0 12px 0; border-radius:4px; border:1px solid #ccc; font-size:1rem; }
+  button { display: block; background-color: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 1.1rem; border-radius: 6px; cursor: pointer; margin: 0 auto 30px; transition: background-color 0.3s ease; }
+  button:hover { background-color: #1e8449; }
+  .total-section, .pembayaran, .qris-section { background: white; max-width: 400px; margin: 0 auto 40px; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); text-align:center; }
+  .total-section p, .pembayaran p { font-size:1.2rem; margin:8px 0; }
+  .pembayaran label { font-weight: 600; font-size: 1.1rem; }
+  .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .qris-section h3 { margin-bottom: 15px; color: #2980b9; }
+  .qris-section img { width: 200px; height: 200px; object-fit: contain; border: 2px solid #2980b9; border-radius: 12px; }
+  .info-cafe { background-color: #184e72; color: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: 20px auto; font-family: Arial, sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+  .info-cafe h3 { margin-top:0; margin-bottom:10px; text-align:center; font-size:24px; }
+  .info-cafe p { font-size:18px; margin:6px 0; }
+  #loginSection { max-width: 400px; margin: 50px auto; background:white; padding:50px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.1); text-align:center; }
+  #successMessage { display:none; text-align:center; margin-top:20px; }
+  #strukSection { display:none; margin-top:20px; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.1); text-align:left; max-width:400px; margin-left:auto; margin-right:auto; }
+  @media (max-width:600px) { .total-section, .pembayaran, .qris-section { max-width:100%; padding:15px; } table, th, td { font-size:0.9rem; } .product-img { width:45px; height:45px; } }
+</style>
+</head>
+<body>
+
+<!-- Login Section -->
+<div id="loginSection">
+  <h2>Login Kasir</h2>
+  <form id="loginForm">
+    <label>Username:</label>
+    <input type="text" id="username" required>
+    <label>Password:</label>
+    <input type="password" id="password" required>
+    <button type="submit">Login</button>
+  </form>
+  <p id="loginError" style="color:red; display:none;">Username atau Password salah!</p>
+</div>
+
+<!-- Info Cafe -->
+<div class="info-cafe" style="display:none;">
+  <h3>Informasi Cafe</h3>
+  <p><strong>Alamat:</strong> Jl. Merdeka No.123, Jakarta Selatan, Indonesia</p>
+  <p><strong>Nomor Telepon:</strong> +62 812-3456-7890</p>
+</div>
+
+<h1 style="display:none;">☕ Cafe Lutfi - Sistem Kasir</h1>
+
+<h2 style="display:none;">🍽️ Makanan</h2>
+<table id="makananTable" style="display:none;">
+  <tr><th>No</th><th>Foto</th><th>Nama</th><th>Harga</th><th>Jumlah</th></tr>
+</table>
+
+<h2 style="display:none;">🥤 Minuman</h2>
+<table id="minumanTable" style="display:none;">
+  <tr><th>No</th><th>Foto</th><th>Nama</th><th>Harga</th><th>Jumlah</th></tr>
+</table>
+
+<div class="total-section" style="display:none;">
+  <button onclick="hitungTotal()">Hitung Total + PPN</button>
+  <p><strong>Subtotal:</strong> Rp <span id="subtotal">0</span></p>
+  <p><strong>PPN (10%):</strong> Rp <span id="ppn">0</span></p>
+  <p><strong>Total Bayar:</strong> Rp <span id="total">0</span></p>
+</div>
+
+<div class="pembayaran" style="display:none;">
+  <h2>🧾 Formulir Pembayaran</h2>
+  <form id="formPembayaran">
+    <label for="nama">Nama Pelanggan:</label>
+    <input type="text" id="nama" required>
+    <label for="bayar">Nominal Bayar (Rp):</label>
+    <input type="number" id="bayar" onchange="hitungKembalian()" required>
+    <p><strong>Kembalian:</strong> Rp <span id="kembalian">0</span></p>
+    <button type="submit">Bayar Sekarang</button>
+  </form>
+</div>
+
+<div class="qris-section" style="display:none;">
+  <h3>Atau Bayar Lewat QRIS</h3>
+  <p>Scan QR di bawah ini:</p>
+  <img src="https://api.qrserver.com/v1/create-qr-code/?data=00020101021126360014ID.GOPAY.WWW011893600914215146054049303764540510005802ID5913Nama%20Merchant6009Jakarta61051310162290504ID62070503***6304&size=200x200" alt="QRIS Simulasi GoPay">
+</div>
+
+<div class="success-container" id="successMessage">
+  <div>✔</div>
+  <h1>Pembayaran Berhasil</h1>
+  <p>Terima kasih! Pembayaran Anda telah diproses dengan sukses.</p>
+  <p>ID Transaksi: <span id="transaction-id"></span></p>
+  <a href="" onclick="window.location.reload()">Kembali ke Beranda</a>
+</div>
+
+<!-- Struk Section -->
+<div id="strukSection">
+  <h3 style="text-align:center;">☕ Struk Cafe Lutfi</h3>
+  <p><strong>Nama Kasir: Admin Lutfi</p>
+  <p><strong>Nama Pelanggan:</strong> <span id="strukNama"></span></p>
+  <p><strong>Tanggal & Waktu:</strong> <span id="strukTanggal"></span></p>
+  <h4>Pesanan:</h4>
+  <div id="strukPesanan"></div>
+  <p><strong>Subtotal:</strong> Rp <span id="strukSubtotal"></span></p>
+  <p><strong>PPN (10%):</strong> Rp <span id="strukPPN"></span></p>
+  <p><strong>Total:</strong> Rp <span id="strukTotal"></span></p>
+  <p><strong>Bayar:</strong> Rp <span id="strukBayar"></span></p>
+  <p><strong>Kembalian:</strong> Rp <span id="strukKembalian"></span></p>
+  <p><strong>ID Transaksi:</strong> <span id="strukID"></span></p>
+  <button onclick="window.print()">🖨️ Cetak Struk</button>
+</div>
+
+<script>
+  // --- Login ---
+  document.getElementById("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    if(user === "kink ivy" && pass === "1234"){
+      document.getElementById("loginSection").style.display = "none";
+      document.querySelector(".info-cafe").style.display = "block";
+      document.querySelector("h1").style.display = "block";
+      document.querySelectorAll("h2").forEach(h=>h.style.display="block");
+      document.querySelectorAll("table").forEach(t=>t.style.display="table");
+      document.querySelector(".total-section").style.display="block";
+      document.querySelector(".pembayaran").style.display="block";
+      document.querySelector(".qris-section").style.display="block";
+    } else { document.getElementById("loginError").style.display = "block"; }
+  });
+
+  // --- Menu Makanan & Minuman ---
+  const makanan = ["Nasi Goreng","Mie Goreng","Ayam Geprek","Bakso","Soto Ayam","Rendang","Gudeg","HotDog","Pecel Lele","Sandwich","Sate Ayam","Chocolate Cheesecake","Ayam Bakar","Burger","Grilled Chicken","Pizza","Nasi Kuning","Mushroom Risotto","Ayam Penyet","Classic Beef","Ikan Bakar","Kentang Goreng","Kerak Telor","Seblak","Fresh Salad"];
+  const minuman = ["Es Teh","Lychee Tea","Kopi Hitam","Kopi Susu","Teh Tarik","Hazelnut Latte","Cappuccino","Matcha Latte","Americano","Soda Gembira","Es Kelapa","Ice Water with Lemon","Lemon Tea","Kopi Gula Aren","Pink Lemonade","Thai Tea","Caramel Latte","Espresso","Taro Latte","Milo Dingin","Coklat Panas","Kopi Tubruk","Red Velvet","Banana Choco","Hot Tea"];
+
+const gambarMakanan = [
+"https://ik.imagekit.io/dcjlghyytp1/https://sayurbox-blog-stage.s3.amazonaws.com/uploads/2020/07/fried-2509089_1920.jpg?tr=f-auto",
+"https://www.dapurkobe.co.id/wp-content/uploads/mie-goreng-pedas-singapore.jpg",
+"https://www.masakapahariini.com/wp-content/uploads/2023/03/shutterstock_1949306203-500x300.jpg",
+"https://asset.kompas.com/crops/aShLyAiGmMhzDUPiQjF77-Jl1NA=/0x0:1000x667/1200x800/data/photo/2020/06/02/5ed5f39c7d8fe.jpg",
+"https://lh5.googleusercontent.com/proxy/ujohVTSDWT0KHp0LyT9wuQEWWsjk_lVddGE3yS9xVWXMre_6TPpWNSbFsec5A7CFof-xeWeSW4-56n58Q8Dxzh_yJkS3PBXNtuh-PgwL1-_BfuE6RKEsiYSH5Gil_CzIXYEBH9KtHZmmO6_2l9jZ3nHg-yPBygX2Eji-YRA0X4RzW9OQC4vCZljnS_OBG1SRZf_L2qNKEOk",
+"https://www.dapurkobe.co.id/wp-content/uploads/rendang-daging.jpg",
+"https://visitingjogja.jogjaprov.go.id/en/wp-content/uploads/2022/09/gudeg_@aetandjournal.jpg",
+"https://www.tokomesin.com/wp-content/uploads/2017/10/cara-membuat-roti-untuk-hotdog-maksindo-3.jpg",
+"https://asset.kompas.com/crops/vhkkKrYsJtPGU9jIpuht1703nLs=/0x0:1000x667/1200x800/data/photo/2021/03/21/60569b33a2b3d.jpeg",
+"https://static.toiimg.com/thumb/83740315.cms?width=1200&height=900",
+"https://assets.unileversolutions.com/v1/126151706.png",
+"https://www.kingarthurbaking.com/sites/default/files/styles/featured_image/public/recipe_legacy/5463-3-large.jpg?itok=l5_GcsqP",
+"https://static.promediateknologi.id/crop/0x0:0x0/0x0/webp/photo/p2/74/2024/07/04/Resep-Ayam-Bakar-Kecap-3385055509.jpg",
+"https://www.masakapahariini.com/wp-content/uploads/2018/10/burger-rendang-MAHI-6.jpg",
+"https://www.allrecipes.com/thmb/Bw4L_IuQHhHeqq52cEkWbA5PIGo=/0x512/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg",
+"https://cdn1-production-images-kly.akamaized.net/5Rgd9MT6ayaE2xEUHS3XWIzpc6w=/0x281:4653x2903/800x450/filters:quality(75):strip_icc():format(webp)/kly-media-production/medias/3049433/original/093267200_1581580862-shutterstock_294636281.jpg",
+"https://asset-2.tribunnews.com/tribunnews/foto/bank/images/nasi-kuning.jpg",
+"https://cdn.loveandlemons.com/wp-content/uploads/2023/01/mushroom-risotto.jpg",
+"https://buckets.sasa.co.id/v1/AUTH_Assets/Assets/p/website/medias/page_medias/Resep_Ayam_Penyet.jpeg",
+"https://embed.widencdn.net/img/beef/p1zhhu6clz/1540x1284px/Classic%20Beef%20Chateaubriand%2003.tif?keep=c",
+"https://asset.kompas.com/crops/TDPZbS20DNsdoD1ySXMOdkpe1yc=/0x0:1000x667/1200x800/data/photo/2020/12/17/5fdb3cd0c1525.jpg",
+"https://asset.kompas.com/crops/_uepYTozTTQHWNr3T-Nfb2BKXBY=/0x0:612x408/1200x800/data/photo/2023/08/16/64dc8ef423dcc.jpeg",
+"https://upload.wikimedia.org/wikipedia/commons/b/bd/Kerak_telor_Betawi.jpg",
+"https://qr.ptsuparmatbk.com/blog/wp-content/uploads/2024/07/seblak.webp",
+"https://www.watermelon.org/wp-content/uploads/2019/11/fresh-mozzarella-salad.jpg"
+// ... (lanjutkan semua URL makanan sesuai list sebelumnya)
+];
+
+const gambarMinuman = [
+"https://www.tokomesin.com/wp-content/uploads/2015/02/Ice-Tea-tokomesin.jpg",
+"https://img2.beritasatu.com/cache/investor/480x310-3/1638016509.jpg",
+"https://cdn.rri.co.id/berita/42/images/1709441954792-8/xc320dj4x7chcts.jpeg",
+"https://jasindo.co.id/uploads/media/otwgs4vrqfbvvy30ymyeelsug-kopijpg",
+"https://asset.kompas.com/crops/hsrnlGnJjSvQmAEyoV_dmwBbUi4=/120x80:1000x667/1200x800/data/photo/2023/10/18/652fcf5eb1b28.jpg",
+"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaLd_KycgpjzxAM_W3W4YCHUsD_spIpzhnZw&s",
+"https://www.livingnorth.com/images/media/articles/food-and-drink/eat-and-drink/coffee.png?fm=pjpg&w=1000&q=95",
+"https://www.justonecookbook.com/wp-content/uploads/2022/12/Matcha-Latte-4598-I-1.jpg",
+"https://statik.tempo.co/data/2023/08/16/id_1228566/1228566_720.jpg",
+"https://api.omela.com/storage/content-editor-images/ce4nENuTao2Tl6xUhsA5WeghfAJKZwjph89EVvQR.jpg",
+"https://rajominang.id/blog/uploads/images/202407/image_750x_66a2f8735a879.jpg",
+"https://patch.com/img/cdn/users/2249993/2015/01/raw/20150154b658cde0fe6.jpg",
+"https://www.nestleprofessional.co.id/sites/default/files/styles/np_article_big/public/2023-11/4%20Kreasi%20Minuman%20dengan%20Bubuk%20Lemon%20Tea.jpg?h=ec041e41&itok=5VABpLHs",
+"https://www.nescafe.com/id/sites/default/files/2023-08/Cobain%20Minuman%20Kekinian%20Ala%20Cafe%20Di%20Rumah%2C%20Yuk%21%20Ini%20Resepnya_desk.jpg",
+"https://www.theharvestkitchen.com/wp-content/uploads/2023/05/pink-lemonade-735x1102.jpg",
+"https://awsimages.detik.net.id/community/media/visual/2019/05/17/0af283b2-ea62-40ff-a886-e889dba0cfc9.jpeg?w=600&q=90",
+"https://api.omela.com/storage/1655/conversions/528d38e7f02524cc096a3aad67f1de1a-large.jpg",
+"https://blogstudio.s3.theshoppad.net/coffeeheroau/ec178d83e5f597b162cda1e60cb64194.jpg",
+"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFsFb3nUaEgAXyzx6JNOF3f4I4N3swZY5Mfw&s",
+"https://akcdn.detik.net.id/community/media/visual/2020/03/10/cd68bade-e6a8-48c0-8918-4c71cd2635c3.jpeg?q=90&w=480",
+"https://cokelatin.id/wp-content/uploads/2023/11/ekomendasi-Coklat-Panas-Asli-dan-Enak-1024x614.webp",
+"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTu0B-K3dvvLjP3I7enyJn10U7N_yuaGWYXkA&s",
+"https://cdn.medcom.id/dynamic/content/2022/05/11/1423891/YtJZlqxdfS.jpg?w=640",
+"https://cdn1-production-images-kly.akamaized.net/p7db1-WRxXIpGGuc0tRIuFx6aUI=/1x36:1000x599/1200x675/filters:quality(75):strip_icc():format(jpeg)/kly-media-production/medias/4563397/original/026272700_1693879421-shutterstock_575644381.jpg",
+"https://media.kare11.com/assets/CCT/images/f73086c4-a1bf-4785-bf7f-ddb26b07c515/f73086c4-a1bf-4785-bf7f-ddb26b07c515_750x422.jpg"
+// ... (lanjutkan semua URL minuman sesuai list sebelumnya)
+];
+
+function buatMenu(tableId, items, gambar, hargaAwal){
+    const table = document.getElementById(tableId);
+    items.forEach((item,i)=>{
+        const row = table.insertRow();
+        const harga = hargaAwal + (i*1000);
+        row.innerHTML = `<td>${i+1}</td>
+        <td><img src="${gambar[i]}" class="product-img"></td>
+        <td>${item}</td>
+        <td><span class="harga">${harga}</span></td>
+        <td><input type="number" class="jumlah" min="0" value="0"></td>`;
+    });
+}
+
+buatMenu("makananTable", makanan, gambarMakanan, 10000);
+buatMenu("minumanTable", minuman, gambarMinuman, 5000);
+
+function hitungTotal(){
+    const hargaEls = document.querySelectorAll(".harga");
+    const jumlahEls = document.querySelectorAll(".jumlah");
+    let subtotal = 0;
+    hargaEls.forEach((el,i)=>{
+        const harga = parseInt(el.textContent);
+        const jumlah = parseInt(jumlahEls[i].value)||0;
+        subtotal += harga*jumlah;
+    });
+    const ppn = subtotal*0.1;
+    const total = subtotal+ppn;
+    document.getElementById("subtotal").textContent = subtotal.toLocaleString();
+    document.getElementById("ppn").textContent = ppn.toLocaleString();
+    document.getElementById("total").textContent = total.toLocaleString();
+    hitungKembalian();
+}
+
+function hitungKembalian(){
+    const total = parseInt(document.getElementById("total").textContent.replace(/,/g,''))||0;
+    const bayar = parseInt(document.getElementById("bayar").value)||0;
+    const kembalian = bayar-total;
+    document.getElementById("kembalian").textContent = (kembalian>=0?kembalian:0).toLocaleString();
+}
+
+// --- Form Pembayaran ---
+document.getElementById("formPembayaran").addEventListener("submit",function(e){
+    e.preventDefault();
+    document.getElementById("formPembayaran").style.display="none";
+    document.getElementById("successMessage").style.display="block";
+    const transactionId = "TXN"+Math.floor(Math.random()*1000000);
+    document.getElementById("transaction-id").textContent = transactionId;
+
+    // --- Buat Struk ---
+    document.getElementById("strukSection").style.display="block";
+    document.getElementById("strukNama").textContent = document.getElementById("nama").value;
+    document.getElementById("strukTanggal").textContent = new Date().toLocaleString();
+    const pesananDiv = document.getElementById("strukPesanan");
+    pesananDiv.innerHTML = "";
+    const jumlahEls = document.querySelectorAll(".jumlah");
+    const namaEls = document.querySelectorAll("#makananTable td:nth-child(3), #minumanTable td:nth-child(3)");
+    const hargaEls = document.querySelectorAll("#makananTable td:nth-child(4) .harga, #minumanTable td:nth-child(4) .harga");
+    jumlahEls.forEach((input,i)=>{
+        const jumlah = parseInt(input.value);
+        if(jumlah>0){
+            pesananDiv.innerHTML += `<p>${namaEls[i].textContent} x ${jumlah} = Rp ${(parseInt(hargaEls[i].textContent)*jumlah).toLocaleString()}</p>`;
+        }
+    });
+    document.getElementById("strukSubtotal").textContent = document.getElementById("subtotal").textContent;
+    document.getElementById("strukPPN").textContent = document.getElementById("ppn").textContent;
+    document.getElementById("strukTotal").textContent = document.getElementById("total").textContent;
+    document.getElementById("strukBayar").textContent = document.getElementById("bayar").value;
+    document.getElementById("strukKembalian").textContent = document.getElementById("kembalian").textContent;
+    document.getElementById("strukID").textContent = transactionId;
+});
+</script>
+</body>
+</html>
